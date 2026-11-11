@@ -2,6 +2,7 @@ use crate::client::InnerClient;
 use crate::codec::FrontendMessage;
 use crate::connection::RequestMessages;
 use crate::types::Type;
+use postgres_protocol::message::backend::Message;
 use postgres_protocol::message::frontend;
 use std::sync::{Arc, Weak};
 
@@ -24,7 +25,18 @@ impl Drop for StatementInner {
                 frontend::sync(buf);
                 buf.split().freeze()
             });
-            let _ = client.send(RequestMessages::Single(FrontendMessage::Raw(buf)));
+            let response = client.send(RequestMessages::Single(FrontendMessage::Raw(buf)));
+            tokio::spawn(async move {
+                let result = async move {
+                    match response?.next().await? {
+                        Message::CloseComplete => Ok(()),
+                        _ => Err(crate::Error::unexpected_message()),
+                    }
+                };
+                if let Err(err) = result.await {
+                    log::error!("failed to deallocate prepared statement: {err}");
+                }
+            });
         }
     }
 }
@@ -59,7 +71,8 @@ impl Statement {
         }))
     }
 
-    pub(crate) fn name(&self) -> &str {
+    /// Returns the name of the prepared statement.
+    pub fn name(&self) -> &str {
         &self.0.name
     }
 

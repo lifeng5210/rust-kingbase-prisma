@@ -243,6 +243,8 @@ pub struct Config {
     pub(crate) target_session_attrs: TargetSessionAttrs,
     pub(crate) channel_binding: ChannelBinding,
     pub(crate) load_balance_hosts: LoadBalanceHosts,
+    pub(crate) pgbouncer_mode: bool,
+    pub(crate) search_path: Option<String>,
 }
 
 impl Default for Config {
@@ -280,6 +282,8 @@ impl Config {
             target_session_attrs: TargetSessionAttrs::Any,
             channel_binding: ChannelBinding::Prefer,
             load_balance_hosts: LoadBalanceHosts::Disable,
+            pgbouncer_mode: false,
+            search_path: None,
         }
     }
 
@@ -616,6 +620,31 @@ impl Config {
         self.load_balance_hosts
     }
 
+    /// Disables internal type and type-query statement caches for transaction
+    /// pooling and sessions that use `DEALLOCATE ALL`.
+    ///
+    /// Defaults to `false`. Caller-owned prepared statements are not invalidated.
+    pub fn pgbouncer_mode(&mut self, enable: bool) -> &mut Config {
+        self.pgbouncer_mode = enable;
+        self
+    }
+
+    /// Gets the PgBouncer mode status.
+    pub fn get_pgbouncer_mode(&self) -> bool {
+        self.pgbouncer_mode
+    }
+
+    /// Sets the session search path as a startup parameter.
+    pub fn search_path(&mut self, search_path: String) -> &mut Config {
+        self.search_path = Some(search_path);
+        self
+    }
+
+    /// Gets the configured session search path.
+    pub fn get_search_path(&self) -> Option<&String> {
+        self.search_path.as_ref()
+    }
+
     fn param(&mut self, key: &str, value: &str) -> Result<(), Error> {
         match key {
             "user" => {
@@ -867,6 +896,8 @@ impl fmt::Debug for Config {
             .field("target_session_attrs", &self.target_session_attrs)
             .field("channel_binding", &self.channel_binding)
             .field("load_balance_hosts", &self.load_balance_hosts)
+            .field("pgbouncer_mode", &self.pgbouncer_mode)
+            .field("search_path", &self.search_path)
             .finish()
     }
 }

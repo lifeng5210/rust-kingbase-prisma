@@ -12,6 +12,7 @@ rust-version = "1.85"
 [features]
 default = ["runtime"]
 runtime = ["tokio-postgres/runtime"]
+vendored-openssl = ["tokio-native-tls/vendored", "native-tls/vendored"]
 
 [dependencies]
 native-tls = { version = "0.2", features = ["alpn"] }

@@ -473,6 +473,20 @@ impl Config {
         self.config.get_load_balance_hosts()
     }
 
+    /// Disables internal type and type-query statement caches for transaction
+    /// pooling and sessions that use `DEALLOCATE ALL`.
+    ///
+    /// Defaults to `false`.
+    pub fn pgbouncer_mode(&mut self, enable: bool) -> &mut Config {
+        self.config.pgbouncer_mode(enable);
+        self
+    }
+
+    /// Gets the PgBouncer mode status.
+    pub fn get_pgbouncer_mode(&self) -> bool {
+        self.config.get_pgbouncer_mode()
+    }
+
     /// Sets the notice callback.
     ///
     /// This callback will be invoked with the contents of every

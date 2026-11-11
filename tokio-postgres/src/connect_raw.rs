@@ -127,6 +127,7 @@ where
         process_id,
         secret_key,
         sql_parse_settings.clone(),
+        config.pgbouncer_mode,
     );
     let mut connection = Connection::new(
         stream.inner,
@@ -234,6 +235,9 @@ where
     }
     if let Some(application_name) = &config.application_name {
         params.push(("application_name", &**application_name));
+    }
+    if let Some(search_path) = &config.search_path {
+        params.push(("search_path", &**search_path));
     }
 
     let mut buf = BytesMut::new();
